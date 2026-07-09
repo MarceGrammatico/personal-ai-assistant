@@ -1,20 +1,17 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 
+from app.core.logging import LoggingConfigurator
 from app.schemas.health import HealthResponse
+
+logger = LoggingConfigurator.get_logger(__name__)
 
 router = APIRouter()
 
 
-@router.get(
-    "/health",
-    response_model=HealthResponse,
-    tags=["system"],
-)
-async def health_check() -> HealthResponse:
-    """
-    Basic application health check.
-    """
+@router.get("/health")
+async def health(
+    request: Request,
+):
+    logger.info("Health endpoint called")
 
-    return HealthResponse(
-        status="ok"
-    )
+    return HealthResponse(status="ok")

@@ -1,2 +1,7 @@
 bootstrap.sh
 .env
+app/core/__pycache__
+tests/integration/__pycache__
+app/core/__pycache__/
+app/api/routers/__pycache__
+

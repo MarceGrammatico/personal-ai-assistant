@@ -1,8 +1,18 @@
 from fastapi import FastAPI
 
+from app.api.middleware.request_context import RequestContextMiddleware
 from app.api.routers.health import router as health_router
 from app.api.routers.root import router as root_router
 from app.core.config import settings
+from app.core.logging import LoggingConfigurator
+
+
+def register_middlewares(app: FastAPI) -> None:
+    """
+    Register all application middlewares.
+    """
+
+    app.add_middleware(RequestContextMiddleware)
 
 
 def create_application() -> FastAPI:
@@ -12,12 +22,18 @@ def create_application() -> FastAPI:
     Creates and configures the FastAPI application.
     """
 
+    LoggingConfigurator.configure()
+    logger = LoggingConfigurator.get_logger(__name__)
+
+    logger.info("Starting Personal AI Assistant...")
+
     application = FastAPI(
         title=settings.APP_NAME,
         version=settings.APP_VERSION,
         debug=settings.DEBUG,
     )
 
+    register_middlewares(application)
     register_routers(application)
 
     return application
