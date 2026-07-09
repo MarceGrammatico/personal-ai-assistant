@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 
 from app.core.config import settings
-from app.core.exceptions import ResourceNotFoundException
 from app.core.logging import LoggingConfigurator
 
 logger = LoggingConfigurator.get_logger(__name__)
@@ -20,8 +19,3 @@ async def root() -> dict[str, str]:
         "version": settings.APP_VERSION,
         "status": "running",
     }
-
-
-@router.get("/boom")
-async def boom():
-    raise ResourceNotFoundException("Demo exception")

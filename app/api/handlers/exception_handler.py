@@ -2,6 +2,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 
 from app.core.context import get_request_id
+from app.core.error_codes import ErrorCode
 from app.core.exceptions import AppException
 from app.core.logging import LoggingConfigurator
 from app.schemas.error import ErrorDetail, ErrorResponse
@@ -54,7 +55,7 @@ async def generic_exception_handler(
     response = ErrorResponse(
         success=False,
         error=ErrorDetail(
-            code="INTERNAL_ERROR",
+            code=ErrorCode.INTERNAL_ERROR,
             message="Internal server error",
         ),
         request_id=get_request_id(),
