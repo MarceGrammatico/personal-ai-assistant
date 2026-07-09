@@ -7,3 +7,4 @@ app/api/routers/__pycache__
 
 app/api/routers/__pycache__/root.cpython-313.pyc
 app/api/routers/__pycache__/health.cpython-313.pyc
+app/api/handlers/__pycache__/exception_handler.cpython-313.pyc

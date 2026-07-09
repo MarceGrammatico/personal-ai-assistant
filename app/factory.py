@@ -7,6 +7,7 @@ from app.api.handlers.exception_handler import (
 from app.api.middleware.request_context import RequestContextMiddleware
 from app.api.routers.health import router as health_router
 from app.api.routers.root import router as root_router
+from app.api.routers.system import router as system_router
 from app.core.config import settings
 from app.core.exceptions import AppException
 from app.core.logging import LoggingConfigurator
@@ -52,6 +53,7 @@ def register_routers(application: FastAPI) -> None:
 
     application.include_router(root_router)
     application.include_router(health_router)
+    application.include_router(system_router)
 
 
 def register_exception_handlers(app: FastAPI) -> None:
