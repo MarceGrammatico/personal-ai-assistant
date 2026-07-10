@@ -1,15 +1,24 @@
+from datetime import datetime
+
 from fastapi.testclient import TestClient
 
+from app.core.config import settings
 from app.factory import create_application
 
-app = create_application()
-
-client = TestClient(app)
+client = TestClient(create_application())
 
 
-def test_health_endpoint() -> None:
+def test_health_endpoint():
     response = client.get("/health")
 
     assert response.status_code == 200
 
-    assert response.json() == {"status": "ok"}
+    data = response.json()
+
+    assert data["status"] == "healthy"
+    assert data["service"] == settings.APP_NAME
+    assert data["version"] == settings.APP_VERSION
+
+    assert "timestamp" in data
+
+    datetime.fromisoformat(data["timestamp"].replace("Z", "+00:00"))
