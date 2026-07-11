@@ -3,11 +3,11 @@ from uuid import UUID, uuid4
 
 from pydantic import ConfigDict, Field
 
-from app.domain.models.base import DomainModel
 from app.domain.models.enums import MessageRole
+from app.domain.models.value_object import ValueObject
 
 
-class Message(DomainModel):
+class Message(ValueObject):
     """
     Represents a message exchanged during a conversation.
     """

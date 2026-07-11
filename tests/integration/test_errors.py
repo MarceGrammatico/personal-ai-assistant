@@ -1,13 +1,9 @@
 from fastapi import APIRouter
-from fastapi.testclient import TestClient
 
 from app.core.exceptions import ResourceNotFoundException
-from app.factory import create_application
 
 
-def test_app_exception_handler():
-    app = create_application()
-
+def test_app_exception_handler(app, client):
     router = APIRouter()
 
     @router.get("/test-error")
@@ -15,8 +11,6 @@ def test_app_exception_handler():
         raise ResourceNotFoundException("Test resource not found")
 
     app.include_router(router)
-
-    client = TestClient(app)
 
     response = client.get("/test-error")
 

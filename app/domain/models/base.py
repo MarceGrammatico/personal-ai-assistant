@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
 
 class DomainModel(BaseModel):
@@ -6,7 +6,4 @@ class DomainModel(BaseModel):
     Base class for all domain models.
     """
 
-    model_config = ConfigDict(
-        frozen=True,
-        extra="forbid",
-    )
+    pass

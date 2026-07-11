@@ -18,3 +18,14 @@ class LogLevel(StrEnum):
 class LogFormat(StrEnum):
     STANDARD = "standard"
     JSON = "json"
+
+
+class LLMProviderType(StrEnum):
+    FAKE = "fake"
+    OPENAI = "openai"
+    OLLAMA = "ollama"
+
+
+class StorageType(StrEnum):
+    MEMORY = "memory"
+    SQLITE = "sqlite"

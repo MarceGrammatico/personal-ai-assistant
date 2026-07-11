@@ -3,6 +3,7 @@
 	test docker-test \
 	lint docker-lint \
 	format docker-format \
+	run chat \
 	clean
 
 help:
@@ -10,6 +11,8 @@ help:
 	@echo "  make test"
 	@echo "  make lint"
 	@echo "  make format"
+	@echo "  make run          - Start the server locally"
+	@echo "  make chat         - Open terminal chat client"
 	@echo ""
 	@echo "Docker"
 	@echo "  make up"
@@ -61,3 +64,9 @@ clean:
 	rm -rf .mypy_cache
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type f -name "*.pyc" -delete
+
+run:
+	uv run uvicorn app.main:app --reload --port 8000
+
+chat:
+	uv run python -m cli

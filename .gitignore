@@ -1,14 +1,27 @@
-bootstrap.sh
-.env
-app/core/__pycache__
-tests/integration/__pycache__
-app/core/__pycache__/
-app/api/routers/__pycache__
-
-app/api/routers/__pycache__/root.cpython-313.pyc
-app/api/routers/__pycache__/health.cpython-313.pyc
-app/api/handlers/__pycache__/exception_handler.cpython-313.pyc
-scripts/bootstrap
-
+# Python
+__pycache__/
 *.pyc
-*__pycache__/
+*.pyo
+
+# Environment
+.env
+.venv/
+
+# Tools cache
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+
+# Distribution
+dist/
+*.egg-info/
+
+# Data
+data/
