@@ -9,6 +9,7 @@ from app.api.middleware.request_context import RequestContextMiddleware
 from app.api.routers.chat import router as chat_router
 from app.api.routers.health import router as health_router
 from app.api.routers.root import router as root_router
+from app.api.routers.settings import router as settings_router
 from app.api.routers.system import router as system_router
 from app.core.config import settings
 from app.core.exceptions import AppException
@@ -57,6 +58,7 @@ def register_routers(application: FastAPI) -> None:
     application.include_router(health_router)
     application.include_router(system_router)
     application.include_router(chat_router)
+    application.include_router(settings_router)
 
     # Serve frontend static files (must be last to not override API routes)
     application.mount(

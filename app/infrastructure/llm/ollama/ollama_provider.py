@@ -1,6 +1,7 @@
 import json
 from collections.abc import AsyncIterator
 
+from app.api.routers.settings import get_temperature
 from app.application.exceptions.llm import LLMProviderUnavailable
 from app.application.interfaces.jira_client import JiraClient
 from app.application.interfaces.llm_provider import LLMProvider
@@ -44,11 +45,16 @@ class OllamaProvider(LLMProvider):
     ) -> ChatResponse:
         """
         Sends a chat request to Ollama (non-streaming).
-        Handles tool calls in a loop.
+        Handles tool calls in a loop if model supports them.
         """
 
         messages = self._build_messages(request)
+
+        # Only pass tools if model supports them
         tools = self._get_tools()
+        model_supports_tools = await self._client.supports_tools()
+        if not model_supports_tools:
+            tools = None
 
         try:
             for _ in range(5):
@@ -56,6 +62,7 @@ class OllamaProvider(LLMProvider):
                     model=settings.OLLAMA_MODEL,
                     messages=messages,
                     tools=tools,
+                    temperature=get_temperature(),
                 )
 
                 msg = response.get("message", {})
@@ -101,28 +108,30 @@ class OllamaProvider(LLMProvider):
         """
         Sends a streaming chat request to Ollama.
 
-        Strategy: resolve tool calls first (non-streaming),
-        then stream the final response.
+        Strategy: If model supports tools, resolve tool calls
+        first (non-streaming), then stream. Otherwise stream directly.
         """
 
         messages = self._build_messages(request)
+
+        # Only attempt tool calling if model actually supports it
         tools = self._get_tools()
+        model_supports_tools = await self._client.supports_tools()
 
         try:
-            # Handle tool calls first (non-streaming)
-            if tools:
+            if tools and model_supports_tools:
                 for _ in range(5):
                     response = await self._client.chat(
                         model=settings.OLLAMA_MODEL,
                         messages=messages,
                         tools=tools,
+                        temperature=get_temperature(),
                     )
 
                     msg = response.get("message", {})
                     tool_calls = msg.get("tool_calls")
 
                     if not tool_calls:
-                        # No more tool calls — yield content
                         content = msg.get("content", "")
                         if content:
                             yield content
@@ -147,13 +156,15 @@ class OllamaProvider(LLMProvider):
                 async for chunk in self._client.chat_stream(
                     model=settings.OLLAMA_MODEL,
                     messages=messages,
+                    temperature=get_temperature(),
                 ):
                     yield chunk
             else:
-                # No tools, stream directly
+                # No tools or model doesn't support them — stream directly
                 async for chunk in self._client.chat_stream(
                     model=settings.OLLAMA_MODEL,
                     messages=messages,
+                    temperature=get_temperature(),
                 ):
                     yield chunk
 
@@ -161,10 +172,15 @@ class OllamaProvider(LLMProvider):
             raise LLMProviderUnavailable(f"Ollama is not available: {exc}") from exc
 
     def _build_messages(self, request: ChatRequest) -> list[dict]:
-        """Convert domain messages to Ollama format."""
+        """
+        Convert domain messages to Ollama format.
+
+        No truncation for local models — they have no token billing
+        and the context window is managed by Ollama itself.
+        """
 
         messages = request.conversation.get_messages_for_llm(
-            max_messages=settings.MAX_CONVERSATION_MESSAGES,
+            max_messages=None,
         )
 
         return [{"role": msg.role.value, "content": msg.content} for msg in messages]

@@ -30,6 +30,7 @@ class OpenAIClient:
         model: str,
         messages: list[dict],
         tools: list[dict] | None = None,
+        temperature: float | None = None,
     ) -> ChatCompletion:
         """
         Send a chat completion request (non-streaming).
@@ -43,6 +44,9 @@ class OpenAIClient:
 
         if tools:
             kwargs["tools"] = tools
+
+        if temperature is not None:
+            kwargs["temperature"] = temperature
 
         try:
             return await self._client.chat.completions.create(**kwargs)

@@ -1,6 +1,6 @@
 import pytest
 
-from app.domain.models import ChatRequest, Conversation, LLMModel
+from app.domain.models import ChatRequest, Conversation
 from app.infrastructure.llm.fake import FakeLLMProvider
 
 
@@ -12,7 +12,7 @@ async def test_fake_provider_should_return_chat_response():
         conversation=Conversation(
             title="Test",
         ),
-        model=LLMModel.FAKE,
+        model="fake",
     )
 
     response = await provider.chat(request)

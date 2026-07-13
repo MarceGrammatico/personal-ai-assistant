@@ -1,4 +1,5 @@
 import json
+import logging
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
@@ -104,6 +105,7 @@ async def _handle_stream(
             yield f"data: {done_data}\n\n"
 
         except Exception:
+            logging.exception("Error during streaming response")
             error_data = json.dumps(
                 {
                     "type": "error",
@@ -153,3 +155,33 @@ async def delete_conversation(
     await repository.delete(UUID(conversation_id))
 
     return {"success": True}
+
+
+@router.get("/conversations/{conversation_id}")
+async def get_conversation(
+    conversation_id: str,
+    repository=Depends(get_conversation_repository),  # noqa: B008
+) -> dict:
+    """
+    Get a conversation with all its messages.
+    """
+
+    from uuid import UUID
+
+    conversation = await repository.get(UUID(conversation_id))
+
+    if not conversation:
+        return {"error": "Conversation not found"}
+
+    return {
+        "id": str(conversation.id),
+        "title": conversation.title,
+        "messages": [
+            {
+                "role": msg.role.value,
+                "content": msg.content,
+                "created_at": msg.created_at.isoformat(),
+            }
+            for msg in conversation.messages
+        ],
+    }

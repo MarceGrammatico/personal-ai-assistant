@@ -4,7 +4,6 @@ from app.domain.models.chat_response import ChatResponse
 from app.domain.models.conversation import Conversation
 from app.domain.models.entity import Entity
 from app.domain.models.enums import (
-    LLMModel,
     MessageRole,
 )
 from app.domain.models.message import Message
@@ -17,7 +16,6 @@ __all__ = [
     "Conversation",
     "DomainModel",
     "Entity",
-    "LLMModel",
     "Message",
     "MessageRole",
     "Usage",

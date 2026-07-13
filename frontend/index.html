@@ -275,6 +275,135 @@
             margin-bottom: 8px;
         }
 
+        /* Settings Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #16213e;
+            border: 1px solid #0f3460;
+            border-radius: 12px;
+            padding: 24px;
+            width: 500px;
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 {
+            color: #e94560;
+            margin-bottom: 16px;
+            font-size: 1.1rem;
+        }
+
+        .modal .field {
+            margin-bottom: 16px;
+        }
+
+        .modal label {
+            display: block;
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .modal select,
+        .modal input,
+        .modal textarea {
+            width: 100%;
+            background: #1a1a2e;
+            border: 1px solid #0f3460;
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #eee;
+            font-size: 0.9rem;
+            font-family: inherit;
+            outline: none;
+        }
+
+        .modal select:focus,
+        .modal input:focus,
+        .modal textarea:focus {
+            border-color: #e94560;
+        }
+
+        .modal textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .modal .range-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .modal input[type="range"] {
+            flex: 1;
+            padding: 0;
+        }
+
+        .modal .range-value {
+            font-size: 0.9rem;
+            color: #e94560;
+            min-width: 30px;
+        }
+
+        .modal .actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .modal .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .modal .btn-save {
+            background: #e94560;
+            color: white;
+        }
+
+        .modal .btn-cancel {
+            background: #0f3460;
+            color: #eee;
+            border: 1px solid #0f3460;
+        }
+
+        header .settings-btn {
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 1.3rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: color 0.15s;
+        }
+
+        header .settings-btn:hover {
+            color: #e94560;
+        }
+
         @media (max-width: 768px) {
             #sidebar { display: none; }
         }
@@ -292,6 +421,7 @@
         <header>
             <h1>🤖 Personal AI Assistant</h1>
             <span class="status" id="status">Connected</span>
+            <button class="settings-btn" onclick="openSettings()" title="Settings">⚙️</button>
         </header>
 
         <div id="chat-container">
@@ -309,6 +439,51 @@
                 autofocus
             ></textarea>
             <button id="send-btn" onclick="sendMessage()">Enviar</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal-overlay" id="settings-modal">
+        <div class="modal">
+            <h2>⚙️ Configuración</h2>
+
+            <div class="field">
+                <label>Proveedor LLM</label>
+                <select id="cfg-provider"></select>
+            </div>
+
+            <div class="field" id="cfg-openai-model-field">
+                <label>Modelo OpenAI</label>
+                <select id="cfg-openai-model"></select>
+            </div>
+
+            <div class="field" id="cfg-ollama-model-field">
+                <label>Modelo Ollama</label>
+                <select id="cfg-ollama-model"></select>
+            </div>
+
+            <div class="field">
+                <label>Temperatura</label>
+                <div class="range-container">
+                    <input type="range" id="cfg-temperature" min="0" max="1" step="0.1" value="0.7">
+                    <span class="range-value" id="cfg-temp-value">0.7</span>
+                </div>
+            </div>
+
+            <div class="field">
+                <label>Máx. mensajes en historial (solo OpenAI)</label>
+                <input type="number" id="cfg-max-messages" min="5" max="200" value="50">
+            </div>
+
+            <div class="field">
+                <label>System Prompt</label>
+                <textarea id="cfg-system-prompt" rows="4"></textarea>
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-cancel" onclick="closeSettings()">Cancelar</button>
+                <button class="btn btn-save" onclick="saveSettings()">Guardar</button>
+            </div>
         </div>
     </div>
 
@@ -360,13 +535,23 @@
             localStorage.setItem('currentConversationId', id);
             chatContainer.innerHTML = '';
 
-            // Fetch conversation messages from non-streaming endpoint
-            // We'll replay by sending a dummy request — but better to just
-            // show stored messages. For now, clear and let user continue.
-            const welcome = document.createElement('div');
-            welcome.className = 'welcome';
-            welcome.innerHTML = `<p>Conversación cargada. Continuá escribiendo.</p>`;
-            chatContainer.appendChild(welcome);
+            try {
+                const resp = await fetch(`${API_BASE}/chat/conversations/${id}`);
+                const data = await resp.json();
+
+                if (data.error) {
+                    addMessage('Conversación no encontrada.', 'error');
+                    return;
+                }
+
+                // Render all messages
+                data.messages.forEach(msg => {
+                    addMessage(msg.content, msg.role === 'user' ? 'user' : 'assistant');
+                });
+
+            } catch (e) {
+                addMessage('Error al cargar la conversación.', 'error');
+            }
 
             loadConversationList();
         }
@@ -565,6 +750,132 @@
             });
 
         loadConversationList();
+
+        // --- Settings ---
+
+        const settingsModal = document.getElementById('settings-modal');
+        const cfgProvider = document.getElementById('cfg-provider');
+        const cfgOpenaiModel = document.getElementById('cfg-openai-model');
+        const cfgOllamaModel = document.getElementById('cfg-ollama-model');
+        const cfgTemperature = document.getElementById('cfg-temperature');
+        const cfgTempValue = document.getElementById('cfg-temp-value');
+        const cfgMaxMessages = document.getElementById('cfg-max-messages');
+        const cfgSystemPrompt = document.getElementById('cfg-system-prompt');
+        const cfgOpenaiField = document.getElementById('cfg-openai-model-field');
+        const cfgOllamaField = document.getElementById('cfg-ollama-model-field');
+
+        cfgTemperature.addEventListener('input', () => {
+            cfgTempValue.textContent = cfgTemperature.value;
+        });
+
+        cfgProvider.addEventListener('change', () => {
+            updateModelFieldVisibility();
+        });
+
+        function updateModelFieldVisibility() {
+            const provider = cfgProvider.value;
+            cfgOpenaiField.style.display = provider === 'openai' ? 'block' : 'none';
+            cfgOllamaField.style.display = provider === 'ollama' ? 'block' : 'none';
+        }
+
+        async function openSettings() {
+            // Load current settings
+            try {
+                const resp = await fetch(`${API_BASE}/settings`);
+                const data = await resp.json();
+
+                // Load available models and providers
+                const modelsResp = await fetch(`${API_BASE}/settings/available-models`);
+                const modelsData = await modelsResp.json();
+
+                // Populate providers
+                cfgProvider.innerHTML = '';
+                modelsData.providers.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p;
+                    opt.textContent = p === 'fake' ? 'Fake (testing)' : p === 'ollama' ? 'Ollama (local)' : p.charAt(0).toUpperCase() + p.slice(1);
+                    if (p === data.llm_provider) opt.selected = true;
+                    cfgProvider.appendChild(opt);
+                });
+
+                // Populate OpenAI models
+                cfgOpenaiModel.innerHTML = '';
+                modelsData.openai_models.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.textContent = m;
+                    if (m === data.openai_model) opt.selected = true;
+                    cfgOpenaiModel.appendChild(opt);
+                });
+
+                if (modelsData.openai_models.length === 0) {
+                    const opt = document.createElement('option');
+                    opt.value = data.openai_model;
+                    opt.textContent = `${data.openai_model} (configured)`;
+                    cfgOpenaiModel.appendChild(opt);
+                }
+
+                // Populate Ollama models
+                cfgOllamaModel.innerHTML = '';
+                modelsData.ollama_models.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.textContent = m;
+                    if (m === data.ollama_model) opt.selected = true;
+                    cfgOllamaModel.appendChild(opt);
+                });
+
+                if (modelsData.ollama_models.length === 0) {
+                    const opt = document.createElement('option');
+                    opt.value = data.ollama_model;
+                    opt.textContent = `${data.ollama_model} (configured)`;
+                    cfgOllamaModel.appendChild(opt);
+                }
+
+                cfgTemperature.value = data.temperature;
+                cfgTempValue.textContent = data.temperature;
+                cfgMaxMessages.value = data.max_conversation_messages;
+                cfgSystemPrompt.value = data.system_prompt;
+
+            } catch (e) {
+                console.error('Error loading settings:', e);
+            }
+
+            updateModelFieldVisibility();
+            settingsModal.classList.add('active');
+        }
+
+        function closeSettings() {
+            settingsModal.classList.remove('active');
+        }
+
+        async function saveSettings() {
+            const update = {
+                llm_provider: cfgProvider.value,
+                openai_model: cfgOpenaiModel.value,
+                ollama_model: cfgOllamaModel.value,
+                temperature: parseFloat(cfgTemperature.value),
+                max_conversation_messages: parseInt(cfgMaxMessages.value),
+                system_prompt: cfgSystemPrompt.value,
+            };
+
+            try {
+                await fetch(`${API_BASE}/settings`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(update),
+                });
+                closeSettings();
+            } catch (e) {
+                console.error('Error saving settings:', e);
+                alert('Error al guardar la configuración');
+            }
+        }
+
+        // Close modal on overlay click
+        settingsModal.addEventListener('click', (e) => {
+            if (e.target === settingsModal) closeSettings();
+        });
     </script>
 </body>
 </html>
