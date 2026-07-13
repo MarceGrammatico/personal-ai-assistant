@@ -3,7 +3,6 @@ from unittest.mock import Mock
 from app.domain.models import (
     ChatRequest,
     Conversation,
-    LLMModel,
     Message,
     MessageRole,
 )
@@ -21,7 +20,7 @@ def test_should_map_domain_messages_to_openai_format():
 
     request = ChatRequest(
         conversation=conversation,
-        model=LLMModel.GPT_5_MINI,
+        model="gpt-5-mini",
     )
 
     mapper = OpenAIMapper()
@@ -44,7 +43,7 @@ def test_should_map_messages_without_system_prompt():
 
     request = ChatRequest(
         conversation=conversation,
-        model=LLMModel.GPT_5_MINI,
+        model="gpt-5-mini",
     )
 
     mapper = OpenAIMapper()

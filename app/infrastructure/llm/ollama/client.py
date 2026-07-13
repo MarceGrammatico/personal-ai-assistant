@@ -22,7 +22,7 @@ class OllamaClient:
     def _client(self) -> httpx.AsyncClient:
         return httpx.AsyncClient(
             base_url=self._base_url,
-            timeout=120,
+            timeout=None,
         )
 
     async def supports_tools(self) -> bool:
@@ -55,6 +55,7 @@ class OllamaClient:
         model: str,
         messages: list[dict],
         tools: list[dict] | None = None,
+        temperature: float | None = None,
     ) -> dict:
         """
         Send a chat completion request (non-streaming).
@@ -69,6 +70,11 @@ class OllamaClient:
         if tools and await self.supports_tools():
             payload["tools"] = tools
 
+        options: dict = {"num_predict": -1}
+        if temperature is not None:
+            options["temperature"] = temperature
+        payload["options"] = options
+
         async with self._client() as client:
             resp = await client.post("/api/chat", json=payload)
             resp.raise_for_status()
@@ -79,17 +85,23 @@ class OllamaClient:
         *,
         model: str,
         messages: list[dict],
+        temperature: float | None = None,
     ) -> AsyncIterator[str]:
         """
         Send a streaming chat request.
         Yields content chunks as they arrive.
         """
 
-        payload = {
+        payload: dict = {
             "model": model,
             "messages": messages,
             "stream": True,
         }
+
+        options: dict = {"num_predict": -1}
+        if temperature is not None:
+            options["temperature"] = temperature
+        payload["options"] = options
 
         async with self._client() as client:
             async with client.stream("POST", "/api/chat", json=payload) as resp:

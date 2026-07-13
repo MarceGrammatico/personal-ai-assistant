@@ -8,7 +8,6 @@ from app.core.enums import (
     LogLevel,
     StorageType,
 )
-from app.domain.models.enums import LLMModel
 
 
 class Settings(BaseSettings):
@@ -29,7 +28,7 @@ class Settings(BaseSettings):
 
     OPENAI_API_KEY: str = Field(default="")
 
-    OPENAI_MODEL: LLMModel = LLMModel.GPT_5_MINI
+    OPENAI_MODEL: str = Field(default="gpt-4o-mini")
 
     OPENAI_TIMEOUT: int = Field(default=60, gt=0)
 

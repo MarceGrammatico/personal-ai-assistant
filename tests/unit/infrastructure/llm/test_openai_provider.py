@@ -7,7 +7,6 @@ from app.domain.models import (
     ChatRequest,
     ChatResponse,
     Conversation,
-    LLMModel,
 )
 from app.infrastructure.llm.openai.exceptions import OpenAIRequestError
 from app.infrastructure.llm.openai.openai_provider import OpenAIProvider
@@ -34,7 +33,7 @@ def _make_completion_mock(content="Hello human"):
 async def test_should_send_chat_request_using_openai():
     request = ChatRequest(
         conversation=Conversation(title="Test"),
-        model=LLMModel.GPT_5_MINI,
+        model="gpt-5-mini",
     )
 
     mock_client = Mock()
@@ -59,6 +58,7 @@ async def test_should_send_chat_request_using_openai():
         model="gpt-5-mini",
         messages=[{"role": "user", "content": "Hello"}],
         tools=None,
+        temperature=0.7,
     )
 
 
@@ -66,7 +66,7 @@ async def test_should_send_chat_request_using_openai():
 async def test_should_translate_openai_error_to_provider_error():
     request = ChatRequest(
         conversation=Conversation(title="Test"),
-        model=LLMModel.GPT_5_MINI,
+        model="gpt-5-mini",
     )
 
     mock_client = Mock()

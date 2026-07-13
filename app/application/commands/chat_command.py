@@ -2,7 +2,6 @@ from app.core.config import settings
 from app.domain.models import (
     ChatRequest,
     Conversation,
-    LLMModel,
     Message,
     MessageRole,
 )
@@ -15,7 +14,7 @@ class ChatCommand:
 
     def __init__(
         self,
-        model: LLMModel | None = None,
+        model: str | None = None,
         system_prompt: str | None = None,
     ) -> None:
         self._model = model or settings.OPENAI_MODEL

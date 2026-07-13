@@ -1,6 +1,7 @@
 import json
 from collections.abc import AsyncIterator
 
+from app.api.routers.settings import get_temperature
 from app.application.exceptions.llm import LLMProviderUnavailable
 from app.application.interfaces.jira_client import JiraClient
 from app.application.interfaces.llm_provider import LLMProvider
@@ -49,9 +50,10 @@ class OpenAIProvider(LLMProvider):
             # Tool-calling loop (max 5 iterations to prevent infinite loops)
             for _ in range(5):
                 completion = await self._client.chat(
-                    model=request.model.value,
+                    model=request.model,
                     messages=messages,
                     tools=tools,
+                    temperature=get_temperature(),
                 )
 
                 choice = completion.choices[0]
@@ -105,9 +107,10 @@ class OpenAIProvider(LLMProvider):
             if tools:
                 for _ in range(5):
                     completion = await self._client.chat(
-                        model=request.model.value,
+                        model=request.model,
                         messages=messages,
                         tools=tools,
+                        temperature=get_temperature(),
                     )
 
                     choice = completion.choices[0]
@@ -138,14 +141,14 @@ class OpenAIProvider(LLMProvider):
 
                 # After tool loop, stream the final response (no tools)
                 async for chunk in self._client.chat_stream(
-                    model=request.model.value,
+                    model=request.model,
                     messages=messages,
                 ):
                     yield chunk
             else:
                 # No tools — just stream directly
                 async for chunk in self._client.chat_stream(
-                    model=request.model.value,
+                    model=request.model,
                     messages=messages,
                 ):
                     yield chunk
