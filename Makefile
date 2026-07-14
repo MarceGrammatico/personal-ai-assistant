@@ -11,8 +11,9 @@ help:
 	@echo "  make test"
 	@echo "  make lint"
 	@echo "  make format"
-	@echo "  make run          - Start the server locally"
-	@echo "  make chat         - Open terminal chat client"
+	@echo "  make run              - Start the server locally"
+	@echo "  make chat             - Open terminal chat client"
+	@echo "  make setup-calendar   - Authenticate Google Calendar"
 	@echo ""
 	@echo "Docker"
 	@echo "  make up"
@@ -70,3 +71,6 @@ run:
 
 chat:
 	uv run python -m cli
+
+setup-calendar:
+	uv run python scripts/setup_google_calendar.py

@@ -17,7 +17,7 @@ class OllamaClient:
 
     def __init__(self, base_url: str | None = None) -> None:
         self._base_url = base_url or settings.OLLAMA_BASE_URL
-        self._supports_tools: bool | None = None
+        self._supports_tools_cache: dict[str, bool] = {}
 
     def _client(self) -> httpx.AsyncClient:
         return httpx.AsyncClient(
@@ -28,26 +28,31 @@ class OllamaClient:
     async def supports_tools(self) -> bool:
         """Check if the current model supports tool calling."""
 
-        if self._supports_tools is not None:
-            return self._supports_tools
+        model = settings.OLLAMA_MODEL
+
+        if model in self._supports_tools_cache:
+            return self._supports_tools_cache[model]
 
         try:
             async with self._client() as client:
                 resp = await client.post(
                     "/api/show",
-                    json={"model": settings.OLLAMA_MODEL},
+                    json={"model": model},
                 )
                 resp.raise_for_status()
                 data = resp.json()
-                capabilities = data.get("model_info", {}).get("capabilities", [])
-                # Also check top-level details
+                # capabilities can be at top-level, model_info, or details
+                capabilities = data.get("capabilities", [])
+                if not capabilities:
+                    capabilities = data.get("model_info", {}).get("capabilities", [])
                 if not capabilities:
                     capabilities = data.get("details", {}).get("capabilities", [])
-                self._supports_tools = "tools" in capabilities
+                result = "tools" in capabilities
         except Exception:
-            self._supports_tools = False
+            result = False
 
-        return self._supports_tools
+        self._supports_tools_cache[model] = result
+        return result
 
     async def chat(
         self,

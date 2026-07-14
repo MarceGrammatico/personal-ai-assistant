@@ -377,6 +377,78 @@ The assistant can:
 - Add comments
 - Transition issue status
 
+### Google Calendar
+
+Allows the assistant to read, create, search, and delete events from your Google Calendar.
+
+#### Setup
+
+**1. Create a Google Cloud Project**
+
+1. Go to https://console.cloud.google.com/
+2. Create a new project (or select an existing one)
+3. Enable the **Google Calendar API**: https://console.cloud.google.com/apis/library/calendar-json.googleapis.com
+
+**2. Create OAuth2 Credentials**
+
+1. Go to **APIs & Services** → **Credentials** → **Create Credentials** → **OAuth client ID**
+2. Application type: **Desktop app**
+3. Give it any name (e.g., "Personal AI Assistant")
+4. Download the JSON file
+5. Save it as `config/google_credentials.json` in the project root
+
+**3. Configure OAuth Consent Screen** (first time only)
+
+1. Go to **APIs & Services** → **OAuth consent screen**
+2. Choose **External** → Create
+3. Fill in app name and your email
+4. In **Scopes**, add `https://www.googleapis.com/auth/calendar`
+5. In **Test users**, add your Gmail address
+6. Save
+
+**4. Authenticate** (one-time, opens browser)
+
+```bash
+make setup-calendar
+```
+
+This opens your browser, you authorize access, and the token is saved to `data/google_token.json`. You only need to do this once.
+
+**5. Enable in `.env`**
+
+```env
+GOOGLE_CALENDAR_ENABLED=true
+GOOGLE_CALENDAR_CREDENTIALS_PATH=config/google_credentials.json
+GOOGLE_CALENDAR_TOKEN_PATH=data/google_token.json
+```
+
+**6. Restart the server**
+
+```bash
+make run
+```
+
+#### Usage
+
+Start a **new conversation** and ask:
+- "¿Qué tengo en el calendario hoy?"
+- "Listame los eventos de esta semana"
+- "Agendame una reunión mañana a las 15:00 llamada Standup"
+- "Buscá en mi calendario reuniones con Pedro"
+- "Eliminá el evento con ID xyz"
+
+#### Requirements
+
+- The LLM provider must support **tool calling** (OpenAI, or Ollama with a tool-capable model like `huihui_ai/qwen3-abliterated`)
+- Models without tool support (e.g., `dolphin-mistral`, `deepseek-r1-abliterated`) cannot use calendar features
+
+#### Troubleshooting
+
+- **"Google Calendar is not configured"** → Ensure `GOOGLE_CALENDAR_ENABLED=true` in `.env`
+- **Token expired** → Run `make setup-calendar` again
+- **Model doesn't use the calendar tool** → Ensure you're using a tool-capable model and start a new conversation
+- **First request is slow** → Normal with local models; the tool-calling loop requires multiple inferences
+
 ---
 
 ## API Reference

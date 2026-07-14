@@ -87,6 +87,23 @@ class Settings(BaseSettings):
         description="Maximum number of messages to keep in conversation history.",
     )
 
+    # --- Google Calendar ---
+
+    GOOGLE_CALENDAR_ENABLED: bool = Field(
+        default=False,
+        description="Enable Google Calendar integration.",
+    )
+
+    GOOGLE_CALENDAR_CREDENTIALS_PATH: str = Field(
+        default="config/google_credentials.json",
+        description="Path to Google OAuth2 credentials file.",
+    )
+
+    GOOGLE_CALENDAR_TOKEN_PATH: str = Field(
+        default="data/google_token.json",
+        description="Path to store the OAuth2 token.",
+    )
+
     # --- Jira ---
 
     JIRA_ENABLED: bool = Field(

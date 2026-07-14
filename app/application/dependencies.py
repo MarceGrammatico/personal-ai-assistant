@@ -29,6 +29,19 @@ def get_jira_client() -> JiraClient | None:
     return AtlassianJiraClient()
 
 
+def get_calendar_client():
+    """
+    Returns the Google Calendar client if configured.
+    """
+
+    if not settings.GOOGLE_CALENDAR_ENABLED:
+        return None
+
+    from app.infrastructure.google import GoogleCalendarClient
+
+    return GoogleCalendarClient()
+
+
 def get_tool_registry() -> ToolRegistry:
     """
     Returns the tool registry with enabled integrations.
@@ -36,6 +49,7 @@ def get_tool_registry() -> ToolRegistry:
 
     return ToolRegistry(
         jira_enabled=settings.JIRA_ENABLED,
+        calendar_enabled=settings.GOOGLE_CALENDAR_ENABLED,
     )
 
 
@@ -48,6 +62,7 @@ def get_llm_provider() -> LLMProvider:
         return OpenAIProvider(
             tool_registry=get_tool_registry(),
             jira_client=get_jira_client(),
+            calendar_client=get_calendar_client(),
         )
 
     if settings.LLM_PROVIDER == LLMProviderType.OLLAMA:
@@ -56,6 +71,7 @@ def get_llm_provider() -> LLMProvider:
         return OllamaProvider(
             tool_registry=get_tool_registry(),
             jira_client=get_jira_client(),
+            calendar_client=get_calendar_client(),
         )
 
     return FakeLLMProvider()

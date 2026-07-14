@@ -1,3 +1,4 @@
+from app.application.tools.calendar_tools import CALENDAR_TOOLS
 from app.application.tools.jira_tools import JIRA_TOOLS
 from app.application.tools.web_tools import WEB_TOOLS
 
@@ -14,6 +15,7 @@ class ToolRegistry:
         self,
         jira_enabled: bool = False,
         web_enabled: bool = True,
+        calendar_enabled: bool = False,
     ) -> None:
         self._tools: list[dict] = []
 
@@ -22,6 +24,9 @@ class ToolRegistry:
 
         if jira_enabled:
             self._tools.extend(JIRA_TOOLS)
+
+        if calendar_enabled:
+            self._tools.extend(CALENDAR_TOOLS)
 
     @property
     def tools(self) -> list[dict]:
@@ -40,3 +45,7 @@ class ToolRegistry:
     def is_web_tool(self, tool_name: str) -> bool:
         """Check if a tool name belongs to web tools."""
         return tool_name.startswith("web_")
+
+    def is_calendar_tool(self, tool_name: str) -> bool:
+        """Check if a tool name belongs to calendar tools."""
+        return tool_name.startswith("calendar_")
