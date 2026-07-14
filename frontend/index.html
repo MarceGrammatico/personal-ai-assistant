@@ -94,24 +94,31 @@
             margin-top: 2px;
         }
 
-        .conv-item .conv-delete {
+        .conv-item .conv-actions {
+            display: flex;
+            gap: 2px;
             opacity: 0;
-            background: none;
-            border: none;
-            color: #e94560;
-            cursor: pointer;
-            font-size: 1rem;
-            padding: 2px 6px;
-            border-radius: 4px;
             transition: opacity 0.15s;
         }
 
-        .conv-item:hover .conv-delete {
+        .conv-item:hover .conv-actions {
             opacity: 1;
         }
 
-        .conv-item .conv-delete:hover {
-            background: rgba(233, 69, 96, 0.2);
+        .conv-item .conv-btn {
+            background: none;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 2px 5px;
+            border-radius: 4px;
+            transition: color 0.15s;
+        }
+
+        .conv-item .conv-btn:hover {
+            color: #e94560;
+            background: rgba(233, 69, 96, 0.1);
         }
 
         /* Main area */
@@ -572,16 +579,38 @@
                     });
 
                     div.innerHTML = `
-                        <div class="conv-info" onclick="loadConversation('${conv.id}')">
+                        <div class="conv-info" onclick="loadConversation('${conv.id}')" title="${conv.title}">
                             <div>${conv.title} (${conv.message_count} msgs)</div>
                             <div class="conv-meta">${date}</div>
                         </div>
-                        <button class="conv-delete" onclick="deleteConversation('${conv.id}', event)" title="Borrar">🗑</button>
+                        <div class="conv-actions">
+                            <button class="conv-btn" onclick="renameConversation('${conv.id}', event)" title="Renombrar">✏️</button>
+                            <button class="conv-btn" onclick="deleteConversation('${conv.id}', event)" title="Borrar">🗑</button>
+                        </div>
                     `;
                     convList.appendChild(div);
                 });
             } catch (e) {
                 // Silently fail if endpoint not available
+            }
+        }
+
+        async function renameConversation(id, event) {
+            event.stopPropagation();
+
+            const newTitle = prompt('Nuevo nombre para la conversación:');
+            if (!newTitle || !newTitle.trim()) return;
+
+            try {
+                await fetch(`${API_BASE}/chat/conversations/${id}/rename`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: newTitle.trim() }),
+                });
+
+                loadConversationList();
+            } catch (e) {
+                console.error('Error renaming conversation:', e);
             }
         }
 
