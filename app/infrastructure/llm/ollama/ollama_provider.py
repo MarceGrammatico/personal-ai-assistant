@@ -3,10 +3,12 @@ from collections.abc import AsyncIterator
 
 from app.api.routers.settings import get_temperature
 from app.application.exceptions.llm import LLMProviderUnavailable
+from app.application.interfaces.calendar_client import CalendarClient
 from app.application.interfaces.jira_client import JiraClient
 from app.application.interfaces.llm_provider import LLMProvider
 from app.application.tools import (
     ToolRegistry,
+    execute_calendar_tool,
     execute_jira_tool,
     execute_web_tool,
 )
@@ -34,10 +36,12 @@ class OllamaProvider(LLMProvider):
         client: OllamaClient | None = None,
         tool_registry: ToolRegistry | None = None,
         jira_client: JiraClient | None = None,
+        calendar_client: CalendarClient | None = None,
     ) -> None:
         self._client = client or OllamaClient()
         self._tool_registry = tool_registry
         self._jira_client = jira_client
+        self._calendar_client = calendar_client
 
     async def chat(
         self,
@@ -197,6 +201,11 @@ class OllamaProvider(LLMProvider):
 
         if self._tool_registry and self._tool_registry.is_web_tool(tool_name):
             return await execute_web_tool(tool_name, arguments)
+
+        if self._tool_registry and self._tool_registry.is_calendar_tool(tool_name):
+            if not self._calendar_client:
+                return json.dumps({"error": "Google Calendar is not configured"})
+            return await execute_calendar_tool(self._calendar_client, tool_name, arguments)
 
         if self._tool_registry and self._tool_registry.is_jira_tool(tool_name):
             if not self._jira_client:

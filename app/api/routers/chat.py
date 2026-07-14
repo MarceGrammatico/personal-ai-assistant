@@ -157,6 +157,29 @@ async def delete_conversation(
     return {"success": True}
 
 
+@router.put("/conversations/{conversation_id}/rename")
+async def rename_conversation(
+    conversation_id: str,
+    body: dict,
+    repository=Depends(get_conversation_repository),  # noqa: B008
+) -> dict:
+    """
+    Rename a conversation.
+    """
+
+    from uuid import UUID
+
+    conversation = await repository.get(UUID(conversation_id))
+
+    if not conversation:
+        return {"error": "Conversation not found"}
+
+    conversation.rename(body.get("title", "Chat"))
+    await repository.save(conversation)
+
+    return {"success": True, "title": conversation.title}
+
+
 @router.get("/conversations/{conversation_id}")
 async def get_conversation(
     conversation_id: str,
