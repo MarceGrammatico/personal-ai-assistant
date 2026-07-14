@@ -597,7 +597,9 @@ Instances of unacceptable behavior may be reported to the project maintainers. A
 
 ## License
 
-This project is private. All rights reserved.
+This project is licensed under the **Apache License 2.0** — see the [LICENSE](LICENSE) file for details.
+
+Copyright 2026 Marcelo Grammaticopiraino
 
 ---
 
