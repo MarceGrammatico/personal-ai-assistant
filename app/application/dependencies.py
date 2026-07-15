@@ -68,6 +68,19 @@ def get_gmail_client():
     return GoogleGmailClient()
 
 
+def get_sheets_client():
+    """
+    Returns the Google Sheets client if configured.
+    """
+
+    if not settings.GOOGLE_SHEETS_ENABLED:
+        return None
+
+    from app.infrastructure.google import GoogleSheetsClient
+
+    return GoogleSheetsClient()
+
+
 def get_tool_registry() -> ToolRegistry:
     """
     Returns the tool registry with enabled integrations.
@@ -78,6 +91,7 @@ def get_tool_registry() -> ToolRegistry:
         calendar_enabled=settings.GOOGLE_CALENDAR_ENABLED,
         drive_enabled=settings.GOOGLE_DRIVE_ENABLED,
         gmail_enabled=settings.GOOGLE_GMAIL_ENABLED,
+        sheets_enabled=settings.GOOGLE_SHEETS_ENABLED,
     )
 
 
@@ -93,6 +107,7 @@ def get_llm_provider() -> LLMProvider:
             calendar_client=get_calendar_client(),
             drive_client=get_drive_client(),
             gmail_client=get_gmail_client(),
+            sheets_client=get_sheets_client(),
         )
 
     if settings.LLM_PROVIDER == LLMProviderType.OLLAMA:
@@ -104,6 +119,7 @@ def get_llm_provider() -> LLMProvider:
             calendar_client=get_calendar_client(),
             drive_client=get_drive_client(),
             gmail_client=get_gmail_client(),
+            sheets_client=get_sheets_client(),
         )
 
     return FakeLLMProvider()

@@ -114,6 +114,11 @@ class Settings(BaseSettings):
         description="Enable Gmail integration.",
     )
 
+    GOOGLE_SHEETS_ENABLED: bool = Field(
+        default=False,
+        description="Enable Google Sheets integration.",
+    )
+
     # --- Jira ---
 
     JIRA_ENABLED: bool = Field(

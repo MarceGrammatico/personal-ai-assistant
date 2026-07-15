@@ -8,12 +8,14 @@ from app.application.interfaces.drive_client import DriveClient
 from app.application.interfaces.gmail_client import GmailClient
 from app.application.interfaces.jira_client import JiraClient
 from app.application.interfaces.llm_provider import LLMProvider
+from app.application.interfaces.sheets_client import SheetsClient
 from app.application.tools import (
     ToolRegistry,
     execute_calendar_tool,
     execute_drive_tool,
     execute_gmail_tool,
     execute_jira_tool,
+    execute_sheets_tool,
     execute_web_tool,
 )
 from app.domain.models import ChatRequest, ChatResponse
@@ -37,6 +39,7 @@ class OpenAIProvider(LLMProvider):
         calendar_client: CalendarClient | None = None,
         drive_client: DriveClient | None = None,
         gmail_client: GmailClient | None = None,
+        sheets_client: SheetsClient | None = None,
     ) -> None:
         self._client = client or OpenAIClient()
         self._mapper = mapper or OpenAIMapper()
@@ -45,6 +48,7 @@ class OpenAIProvider(LLMProvider):
         self._calendar_client = calendar_client
         self._drive_client = drive_client
         self._gmail_client = gmail_client
+        self._sheets_client = sheets_client
 
     async def chat(
         self,
@@ -192,6 +196,11 @@ class OpenAIProvider(LLMProvider):
             if not self._gmail_client:
                 return json.dumps({"error": "Gmail is not configured"})
             return await execute_gmail_tool(self._gmail_client, tool_name, arguments)
+
+        if self._tool_registry and self._tool_registry.is_sheets_tool(tool_name):
+            if not self._sheets_client:
+                return json.dumps({"error": "Google Sheets is not configured"})
+            return await execute_sheets_tool(self._sheets_client, tool_name, arguments)
 
         if self._tool_registry and self._tool_registry.is_jira_tool(tool_name):
             if not self._jira_client:
