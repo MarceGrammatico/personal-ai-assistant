@@ -4,11 +4,13 @@ from collections.abc import AsyncIterator
 from app.api.routers.settings import get_temperature
 from app.application.exceptions.llm import LLMProviderUnavailable
 from app.application.interfaces.calendar_client import CalendarClient
+from app.application.interfaces.drive_client import DriveClient
 from app.application.interfaces.jira_client import JiraClient
 from app.application.interfaces.llm_provider import LLMProvider
 from app.application.tools import (
     ToolRegistry,
     execute_calendar_tool,
+    execute_drive_tool,
     execute_jira_tool,
     execute_web_tool,
 )
@@ -31,12 +33,14 @@ class OpenAIProvider(LLMProvider):
         tool_registry: ToolRegistry | None = None,
         jira_client: JiraClient | None = None,
         calendar_client: CalendarClient | None = None,
+        drive_client: DriveClient | None = None,
     ) -> None:
         self._client = client or OpenAIClient()
         self._mapper = mapper or OpenAIMapper()
         self._tool_registry = tool_registry
         self._jira_client = jira_client
         self._calendar_client = calendar_client
+        self._drive_client = drive_client
 
     async def chat(
         self,
@@ -174,6 +178,11 @@ class OpenAIProvider(LLMProvider):
             if not self._calendar_client:
                 return json.dumps({"error": "Google Calendar is not configured"})
             return await execute_calendar_tool(self._calendar_client, tool_name, arguments)
+
+        if self._tool_registry and self._tool_registry.is_drive_tool(tool_name):
+            if not self._drive_client:
+                return json.dumps({"error": "Google Drive is not configured"})
+            return await execute_drive_tool(self._drive_client, tool_name, arguments)
 
         if self._tool_registry and self._tool_registry.is_jira_tool(tool_name):
             if not self._jira_client:

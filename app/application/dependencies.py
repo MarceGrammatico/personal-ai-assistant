@@ -42,6 +42,19 @@ def get_calendar_client():
     return GoogleCalendarClient()
 
 
+def get_drive_client():
+    """
+    Returns the Google Drive client if configured.
+    """
+
+    if not settings.GOOGLE_DRIVE_ENABLED:
+        return None
+
+    from app.infrastructure.google import GoogleDriveClient
+
+    return GoogleDriveClient()
+
+
 def get_tool_registry() -> ToolRegistry:
     """
     Returns the tool registry with enabled integrations.
@@ -50,6 +63,7 @@ def get_tool_registry() -> ToolRegistry:
     return ToolRegistry(
         jira_enabled=settings.JIRA_ENABLED,
         calendar_enabled=settings.GOOGLE_CALENDAR_ENABLED,
+        drive_enabled=settings.GOOGLE_DRIVE_ENABLED,
     )
 
 
@@ -63,6 +77,7 @@ def get_llm_provider() -> LLMProvider:
             tool_registry=get_tool_registry(),
             jira_client=get_jira_client(),
             calendar_client=get_calendar_client(),
+            drive_client=get_drive_client(),
         )
 
     if settings.LLM_PROVIDER == LLMProviderType.OLLAMA:
@@ -72,6 +87,7 @@ def get_llm_provider() -> LLMProvider:
             tool_registry=get_tool_registry(),
             jira_client=get_jira_client(),
             calendar_client=get_calendar_client(),
+            drive_client=get_drive_client(),
         )
 
     return FakeLLMProvider()

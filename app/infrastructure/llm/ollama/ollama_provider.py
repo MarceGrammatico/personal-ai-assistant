@@ -4,11 +4,13 @@ from collections.abc import AsyncIterator
 from app.api.routers.settings import get_temperature
 from app.application.exceptions.llm import LLMProviderUnavailable
 from app.application.interfaces.calendar_client import CalendarClient
+from app.application.interfaces.drive_client import DriveClient
 from app.application.interfaces.jira_client import JiraClient
 from app.application.interfaces.llm_provider import LLMProvider
 from app.application.tools import (
     ToolRegistry,
     execute_calendar_tool,
+    execute_drive_tool,
     execute_jira_tool,
     execute_web_tool,
 )
@@ -37,11 +39,13 @@ class OllamaProvider(LLMProvider):
         tool_registry: ToolRegistry | None = None,
         jira_client: JiraClient | None = None,
         calendar_client: CalendarClient | None = None,
+        drive_client: DriveClient | None = None,
     ) -> None:
         self._client = client or OllamaClient()
         self._tool_registry = tool_registry
         self._jira_client = jira_client
         self._calendar_client = calendar_client
+        self._drive_client = drive_client
 
     async def chat(
         self,
@@ -61,11 +65,13 @@ class OllamaProvider(LLMProvider):
             tools = None
 
         try:
-            for _ in range(5):
+            for i in range(5):
                 response = await self._client.chat(
                     model=settings.OLLAMA_MODEL,
                     messages=messages,
-                    tools=tools,
+                    # Only pass tools on first iteration;
+                    # after tool results are added, let model respond freely
+                    tools=tools if i == 0 else None,
                     temperature=get_temperature(),
                 )
 
@@ -124,23 +130,19 @@ class OllamaProvider(LLMProvider):
 
         try:
             if tools and model_supports_tools:
-                for _ in range(5):
-                    response = await self._client.chat(
-                        model=settings.OLLAMA_MODEL,
-                        messages=messages,
-                        tools=tools,
-                        temperature=get_temperature(),
-                    )
+                # First call: with tools so model can decide to use them
+                response = await self._client.chat(
+                    model=settings.OLLAMA_MODEL,
+                    messages=messages,
+                    tools=tools,
+                    temperature=get_temperature(),
+                )
 
-                    msg = response.get("message", {})
-                    tool_calls = msg.get("tool_calls")
+                msg = response.get("message", {})
+                tool_calls = msg.get("tool_calls")
 
-                    if not tool_calls:
-                        content = msg.get("content", "")
-                        if content:
-                            yield content
-                        return
-
+                # If model used tools, execute them
+                if tool_calls:
                     messages.append(msg)
 
                     for tool_call in tool_calls:
@@ -156,13 +158,18 @@ class OllamaProvider(LLMProvider):
                             }
                         )
 
-                # After tool loop, stream final response
-                async for chunk in self._client.chat_stream(
-                    model=settings.OLLAMA_MODEL,
-                    messages=messages,
-                    temperature=get_temperature(),
-                ):
-                    yield chunk
+                    # Stream the final response (no tools)
+                    async for chunk in self._client.chat_stream(
+                        model=settings.OLLAMA_MODEL,
+                        messages=messages,
+                        temperature=get_temperature(),
+                    ):
+                        yield chunk
+                else:
+                    # No tool calls — yield the response we got
+                    content = msg.get("content", "")
+                    if content:
+                        yield content
             else:
                 # No tools or model doesn't support them — stream directly
                 async for chunk in self._client.chat_stream(
@@ -206,6 +213,11 @@ class OllamaProvider(LLMProvider):
             if not self._calendar_client:
                 return json.dumps({"error": "Google Calendar is not configured"})
             return await execute_calendar_tool(self._calendar_client, tool_name, arguments)
+
+        if self._tool_registry and self._tool_registry.is_drive_tool(tool_name):
+            if not self._drive_client:
+                return json.dumps({"error": "Google Drive is not configured"})
+            return await execute_drive_tool(self._drive_client, tool_name, arguments)
 
         if self._tool_registry and self._tool_registry.is_jira_tool(tool_name):
             if not self._jira_client:
