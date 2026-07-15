@@ -389,14 +389,31 @@ Allows the assistant to read, create, search, and delete events from your Google
 2. Create a new project (or select an existing one)
 3. Enable the **Google Calendar API**: https://console.cloud.google.com/apis/library/calendar-json.googleapis.com
 4. Enable the **Google Drive API**: https://console.cloud.google.com/apis/library/drive.googleapis.com
+5. Enable the **Gmail API**: https://console.cloud.google.com/apis/library/gmail.googleapis.com
+6. Enable the **Google Sheets API**: https://console.cloud.google.com/apis/library/sheets.googleapis.com
 
 **2. Create OAuth2 Credentials**
 
 1. Go to **APIs & Services** → **Credentials** → **Create Credentials** → **OAuth client ID**
 2. Application type: **Desktop app**
 3. Give it any name (e.g., "Personal AI Assistant")
-4. Download the JSON file
-5. Save it as `config/google_credentials.json` in the project root
+4. Click **Create**
+5. A popup will show your Client ID and Client Secret — click **Download JSON**
+6. Save the downloaded file as `config/google_credentials.json` in the project root
+
+The JSON file looks like this (you don't need to edit it):
+```json
+{
+  "installed": {
+    "client_id": "xxxx.apps.googleusercontent.com",
+    "project_id": "your-project",
+    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+    "token_uri": "https://oauth2.googleapis.com/token",
+    "client_secret": "GOCSPX-xxxx",
+    "redirect_uris": ["http://localhost"]
+  }
+}
+```
 
 **3. Configure OAuth Consent Screen** (first time only)
 
@@ -406,6 +423,8 @@ Allows the assistant to read, create, search, and delete events from your Google
 4. In **Scopes**, add:
    - `https://www.googleapis.com/auth/calendar`
    - `https://www.googleapis.com/auth/drive`
+   - `https://www.googleapis.com/auth/gmail.modify`
+   - `https://www.googleapis.com/auth/spreadsheets`
 5. In **Test users**, add your Gmail address
 6. Save
 
@@ -415,13 +434,15 @@ Allows the assistant to read, create, search, and delete events from your Google
 make setup-google-apps-auth
 ```
 
-This opens your browser, you authorize access to Calendar + Drive, and the token is saved to `data/google_token.json`. You only need to do this once.
+This opens your browser, you authorize access to Calendar + Drive + Gmail + Sheets, and the token is saved to `data/google_token.json`. You only need to do this once.
 
 **5. Enable in `.env`**
 
 ```env
 GOOGLE_CALENDAR_ENABLED=true
 GOOGLE_DRIVE_ENABLED=true
+GOOGLE_GMAIL_ENABLED=true
+GOOGLE_SHEETS_ENABLED=true
 GOOGLE_CALENDAR_CREDENTIALS_PATH=config/google_credentials.json
 GOOGLE_CALENDAR_TOKEN_PATH=data/google_token.json
 ```
@@ -452,10 +473,30 @@ Start a **new conversation** and ask:
 
 Supports: Google Docs (exported as text), Sheets (exported as CSV), and text files.
 
+#### Gmail Usage
+
+- "Mostrame mis últimos emails"
+- "Buscá en mi Gmail emails de Juan sobre el presupuesto"
+- "Leé el email con ID xxx"
+- "Mandá un email a juan@ejemplo.com con asunto Reunión y que diga que confirmamos"
+- "Buscá emails no leídos de esta semana"
+
+Supports Gmail search syntax (e.g., `from:john`, `is:unread`, `after:2026/07/01`).
+
+#### Sheets Usage
+
+- "Leé los datos del spreadsheet xxx, rango A1:D10"
+- "Escribí estos datos en la hoja xxx: [['Nombre','Edad'],['Juan','30']]"
+- "Agregá una fila con 'Pedro', '25' al spreadsheet xxx"
+- "Creá una nueva planilla llamada 'Presupuesto 2026'"
+- "Listame las hojas del spreadsheet xxx"
+
+The spreadsheet ID is the long string in the Google Sheets URL between `/d/` and `/edit`.
+
 #### Requirements
 
 - The LLM provider must support **tool calling** (OpenAI, or Ollama with a tool-capable model like `huihui_ai/qwen3-abliterated`)
-- Models without tool support (e.g., `dolphin-mistral`, `deepseek-r1-abliterated`) cannot use calendar/drive features
+- Models without tool support (e.g., `dolphin-mistral`, `deepseek-r1-abliterated`) cannot use calendar/drive/gmail/sheets features
 
 #### Troubleshooting
 
