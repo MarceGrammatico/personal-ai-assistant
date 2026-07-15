@@ -21,6 +21,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 SCOPES = [
     "https://www.googleapis.com/auth/calendar",
     "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/gmail.modify",
 ]
 
 CREDENTIALS_PATH = Path("config/google_credentials.json")
@@ -71,6 +72,8 @@ def main():
     print("\n   You can now enable Google Apps in .env:")
     print("   GOOGLE_CALENDAR_ENABLED=true")
     print("   GOOGLE_DRIVE_ENABLED=true")
+    print("   GOOGLE_GMAIL_ENABLED=true")
+    print("   GOOGLE_SHEETS_ENABLED=true")
 
 
 if __name__ == "__main__":

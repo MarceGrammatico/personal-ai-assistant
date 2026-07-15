@@ -109,6 +109,11 @@ class Settings(BaseSettings):
         description="Enable Google Drive integration.",
     )
 
+    GOOGLE_GMAIL_ENABLED: bool = Field(
+        default=False,
+        description="Enable Gmail integration.",
+    )
+
     # --- Jira ---
 
     JIRA_ENABLED: bool = Field(
