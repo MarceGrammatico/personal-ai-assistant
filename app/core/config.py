@@ -104,6 +104,11 @@ class Settings(BaseSettings):
         description="Path to store the OAuth2 token.",
     )
 
+    GOOGLE_DRIVE_ENABLED: bool = Field(
+        default=False,
+        description="Enable Google Drive integration.",
+    )
+
     # --- Jira ---
 
     JIRA_ENABLED: bool = Field(

@@ -388,6 +388,7 @@ Allows the assistant to read, create, search, and delete events from your Google
 1. Go to https://console.cloud.google.com/
 2. Create a new project (or select an existing one)
 3. Enable the **Google Calendar API**: https://console.cloud.google.com/apis/library/calendar-json.googleapis.com
+4. Enable the **Google Drive API**: https://console.cloud.google.com/apis/library/drive.googleapis.com
 
 **2. Create OAuth2 Credentials**
 
@@ -402,22 +403,25 @@ Allows the assistant to read, create, search, and delete events from your Google
 1. Go to **APIs & Services** → **OAuth consent screen**
 2. Choose **External** → Create
 3. Fill in app name and your email
-4. In **Scopes**, add `https://www.googleapis.com/auth/calendar`
+4. In **Scopes**, add:
+   - `https://www.googleapis.com/auth/calendar`
+   - `https://www.googleapis.com/auth/drive`
 5. In **Test users**, add your Gmail address
 6. Save
 
 **4. Authenticate** (one-time, opens browser)
 
 ```bash
-make setup-calendar
+make setup-google-apps-auth
 ```
 
-This opens your browser, you authorize access, and the token is saved to `data/google_token.json`. You only need to do this once.
+This opens your browser, you authorize access to Calendar + Drive, and the token is saved to `data/google_token.json`. You only need to do this once.
 
 **5. Enable in `.env`**
 
 ```env
 GOOGLE_CALENDAR_ENABLED=true
+GOOGLE_DRIVE_ENABLED=true
 GOOGLE_CALENDAR_CREDENTIALS_PATH=config/google_credentials.json
 GOOGLE_CALENDAR_TOKEN_PATH=data/google_token.json
 ```
@@ -428,7 +432,7 @@ GOOGLE_CALENDAR_TOKEN_PATH=data/google_token.json
 make run
 ```
 
-#### Usage
+#### Calendar Usage
 
 Start a **new conversation** and ask:
 - "¿Qué tengo en el calendario hoy?"
@@ -437,16 +441,28 @@ Start a **new conversation** and ask:
 - "Buscá en mi calendario reuniones con Pedro"
 - "Eliminá el evento con ID xyz"
 
+#### Drive Usage
+
+- "Listame los archivos de mi Google Drive"
+- "Buscá en mi Drive el archivo 'presupuesto'"
+- "Leé el contenido del archivo con ID xxx"
+- "Creá un archivo en Drive llamado notas.txt con este contenido: ..."
+- "Actualizá el archivo xxx con este nuevo contenido: ..."
+- "Borrá el archivo con ID xxx"
+
+Supports: Google Docs (exported as text), Sheets (exported as CSV), and text files.
+
 #### Requirements
 
 - The LLM provider must support **tool calling** (OpenAI, or Ollama with a tool-capable model like `huihui_ai/qwen3-abliterated`)
-- Models without tool support (e.g., `dolphin-mistral`, `deepseek-r1-abliterated`) cannot use calendar features
+- Models without tool support (e.g., `dolphin-mistral`, `deepseek-r1-abliterated`) cannot use calendar/drive features
 
 #### Troubleshooting
 
-- **"Google Calendar is not configured"** → Ensure `GOOGLE_CALENDAR_ENABLED=true` in `.env`
-- **Token expired** → Run `make setup-calendar` again
-- **Model doesn't use the calendar tool** → Ensure you're using a tool-capable model and start a new conversation
+- **"Google Calendar/Drive is not configured"** → Ensure `GOOGLE_CALENDAR_ENABLED=true` and/or `GOOGLE_DRIVE_ENABLED=true` in `.env`
+- **Token expired** → Run `make setup-google-apps-auth` again
+- **Missing scope (Drive works but not Calendar or vice versa)** → Delete `data/google_token.json` and re-run `make setup-google-apps-auth`
+- **Model doesn't use the tools** → Ensure you're using a tool-capable model and start a new conversation
 - **First request is slow** → Normal with local models; the tool-calling loop requires multiple inferences
 
 ---

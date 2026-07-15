@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """
-Google Calendar OAuth2 Setup
+Google Apps OAuth2 Setup (Calendar + Drive)
 
-Run this script once to authenticate with Google Calendar.
+Run this script once to authenticate with Google services.
 It opens a browser for authorization and saves the token
 to data/google_token.json for the server to use.
 
 Usage:
-    uv run python scripts/setup_google_calendar.py
+    make setup-google-apps-auth
+    # or
+    uv run python scripts/setup_google_apps_auth.py
 """
 
 from pathlib import Path
@@ -16,15 +18,18 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 
-SCOPES = ["https://www.googleapis.com/auth/calendar"]
+SCOPES = [
+    "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/drive",
+]
 
 CREDENTIALS_PATH = Path("config/google_credentials.json")
 TOKEN_PATH = Path("data/google_token.json")
 
 
 def main():
-    print("🗓️  Google Calendar Setup")
-    print("=" * 40)
+    print("🔐 Google Apps Authentication Setup (Calendar + Drive)")
+    print("=" * 55)
 
     if not CREDENTIALS_PATH.exists():
         print(f"\n❌ Credentials file not found: {CREDENTIALS_PATH}")
@@ -63,8 +68,9 @@ def main():
 
     print("\n✅ Authentication successful!")
     print(f"   Token saved to: {TOKEN_PATH}")
-    print("\n   You can now enable Google Calendar in .env:")
+    print("\n   You can now enable Google Apps in .env:")
     print("   GOOGLE_CALENDAR_ENABLED=true")
+    print("   GOOGLE_DRIVE_ENABLED=true")
 
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@
 	test docker-test \
 	lint docker-lint \
 	format docker-format \
-	run chat \
+	run chat setup-google-apps-auth \
 	clean
 
 help:
@@ -11,9 +11,9 @@ help:
 	@echo "  make test"
 	@echo "  make lint"
 	@echo "  make format"
-	@echo "  make run              - Start the server locally"
-	@echo "  make chat             - Open terminal chat client"
-	@echo "  make setup-calendar   - Authenticate Google Calendar"
+	@echo "  make run                      - Start the server locally"
+	@echo "  make chat                     - Open terminal chat client"
+	@echo "  make setup-google-apps-auth   - Authenticate Google (Calendar + Drive)"
 	@echo ""
 	@echo "Docker"
 	@echo "  make up"
@@ -72,5 +72,5 @@ run:
 chat:
 	uv run python -m cli
 
-setup-calendar:
-	uv run python scripts/setup_google_calendar.py
+setup-google-apps-auth:
+	uv run python scripts/setup_google_apps_auth.py
