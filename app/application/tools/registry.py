@@ -2,6 +2,7 @@ from app.application.tools.calendar_tools import CALENDAR_TOOLS
 from app.application.tools.drive_tools import DRIVE_TOOLS
 from app.application.tools.gmail_tools import GMAIL_TOOLS
 from app.application.tools.jira_tools import JIRA_TOOLS
+from app.application.tools.sheets_tools import SHEETS_TOOLS
 from app.application.tools.web_tools import WEB_TOOLS
 
 
@@ -20,6 +21,7 @@ class ToolRegistry:
         calendar_enabled: bool = False,
         drive_enabled: bool = False,
         gmail_enabled: bool = False,
+        sheets_enabled: bool = False,
     ) -> None:
         self._tools: list[dict] = []
 
@@ -37,6 +39,9 @@ class ToolRegistry:
 
         if gmail_enabled:
             self._tools.extend(GMAIL_TOOLS)
+
+        if sheets_enabled:
+            self._tools.extend(SHEETS_TOOLS)
 
     @property
     def tools(self) -> list[dict]:
@@ -60,3 +65,6 @@ class ToolRegistry:
 
     def is_gmail_tool(self, tool_name: str) -> bool:
         return tool_name.startswith("gmail_")
+
+    def is_sheets_tool(self, tool_name: str) -> bool:
+        return tool_name.startswith("sheets_")
