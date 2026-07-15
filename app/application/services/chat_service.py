@@ -119,11 +119,16 @@ class ChatService:
     ) -> Conversation:
         """
         Retrieves an existing conversation or creates a new one.
+
+        Always updates the system prompt to the latest version
+        so existing conversations get access to new tools/capabilities.
         """
 
         if conversation_id:
             conversation = await self._repository.get(conversation_id)
             if conversation:
+                # Update system prompt to latest
+                conversation.system_prompt = self._command._system_prompt
                 return conversation
 
         return Conversation(
