@@ -1,5 +1,6 @@
 from app.application.tools.calendar_tools import CALENDAR_TOOLS
 from app.application.tools.drive_tools import DRIVE_TOOLS
+from app.application.tools.gmail_tools import GMAIL_TOOLS
 from app.application.tools.jira_tools import JIRA_TOOLS
 from app.application.tools.web_tools import WEB_TOOLS
 
@@ -18,6 +19,7 @@ class ToolRegistry:
         web_enabled: bool = True,
         calendar_enabled: bool = False,
         drive_enabled: bool = False,
+        gmail_enabled: bool = False,
     ) -> None:
         self._tools: list[dict] = []
 
@@ -33,14 +35,15 @@ class ToolRegistry:
         if drive_enabled:
             self._tools.extend(DRIVE_TOOLS)
 
+        if gmail_enabled:
+            self._tools.extend(GMAIL_TOOLS)
+
     @property
     def tools(self) -> list[dict]:
-        """Return all registered tool schemas."""
         return self._tools
 
     @property
     def enabled(self) -> bool:
-        """Whether any tools are available."""
         return len(self._tools) > 0
 
     def is_jira_tool(self, tool_name: str) -> bool:
@@ -54,3 +57,6 @@ class ToolRegistry:
 
     def is_drive_tool(self, tool_name: str) -> bool:
         return tool_name.startswith("drive_")
+
+    def is_gmail_tool(self, tool_name: str) -> bool:
+        return tool_name.startswith("gmail_")
